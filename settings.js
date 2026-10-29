@@ -14,6 +14,15 @@ window.COIN_DASH = {
     maxhard: { label: 'Max Hard', speed: 2.5 }
   },
   defaultDifficulty: 'medium',
+  // Synthesized with Web Audio; type 'noise' is a filtered noise burst (freq = low-pass cutoff).
+  defaultSound: 'Beep',
+  sounds: {
+    Beep: { type: 'square', freq: 880, to: 660, duration: 0.18, volume: 0.15 },
+    Buzz: { type: 'sawtooth', freq: 140, to: 70, duration: 0.4, volume: 0.2 },
+    Boom: { type: 'noise', freq: 900, to: 60, duration: 0.6, volume: 0.6 },
+    Off: null
+  },
+  pickupSound: { type: 'sine', freq: 990, to: 1480, duration: 0.08, volume: 0.12 },
   // Colour themes; the toggle button switches between them at any time.
   defaultTheme: 'dark',
   themes: {
