@@ -1,4 +1,52 @@
 /* global Phaser, COIN_DASH */
+const sound = {
+  ctx: null,
+  unlock() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    this.ctx = this.ctx || new AC();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  },
+  choice() { return document.getElementById('sound')?.value || COIN_DASH.defaultSound; },
+  play(def) {
+    const ctx = def && this.unlock();
+    if (!ctx) return;
+    const t = ctx.currentTime, end = t + def.duration, gain = ctx.createGain();
+    gain.gain.setValueAtTime(def.volume, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, end);
+    gain.connect(ctx.destination);
+    let src, out = gain;
+    if (def.type === 'noise') {
+      const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * def.duration), ctx.sampleRate);
+      buf.getChannelData(0).forEach((_, i, d) => { d[i] = Math.random() * 2 - 1; });
+      src = ctx.createBufferSource();
+      src.buffer = buf;
+      out = ctx.createBiquadFilter();
+      out.frequency.setValueAtTime(def.freq, t);
+      out.frequency.exponentialRampToValueAtTime(def.to, end);
+      out.connect(gain);
+    } else {
+      src = ctx.createOscillator();
+      src.type = def.type;
+      src.frequency.setValueAtTime(def.freq, t);
+      src.frequency.exponentialRampToValueAtTime(def.to, end);
+    }
+    src.connect(out);
+    src.start(t);
+    src.stop(end);
+  },
+  playChoice() { this.play(COIN_DASH.sounds[this.choice()]); },
+  playPickup() { if (COIN_DASH.sounds[this.choice()]) this.play(COIN_DASH.pickupSound); }
+};
+['pointerdown', 'keydown'].forEach(type => window.addEventListener(type, () => sound.unlock()));
+const soundSelect = document.getElementById('sound');
+if (soundSelect) {
+  Object.keys(COIN_DASH.sounds).forEach(name => soundSelect.add(new Option(name, name)));
+  soundSelect.value = COIN_DASH.defaultSound;
+  soundSelect.addEventListener('change', () => { soundSelect.blur(); sound.playChoice(); });
+}
+
 class CoinDash extends Phaser.Scene {
   constructor() { super('CoinDash'); }
 
@@ -29,9 +77,13 @@ class CoinDash extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.coin, () => {
       if (this.finished) return;
       this.score++;
+      sound.playPickup();
       this.placeCoin();
     });
-    this.physics.add.overlap(this.player, this.drones, () => this.finish('A drone caught you!'));
+    this.physics.add.overlap(this.player, this.drones, () => {
+      if (!this.finished) sound.playChoice();
+      this.finish('A drone caught you!');
+    });
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys('W,A,S,D,R');
     this.input.keyboard.on('keydown-R', () => this.scene.restart());
