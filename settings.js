@@ -6,6 +6,14 @@ window.COIN_DASH = {
   playerSpeed: 240,
   droneSpeed: 105,
   droneCount: 3,
+  // Difficulty scales player and drone speed; keys 1-4 switch and restart the round.
+  difficulties: {
+    easy: { label: 'Easy', speed: 0.75 },
+    medium: { label: 'Medium', speed: 1 },
+    hard: { label: 'Hard', speed: 1.75 },
+    maxhard: { label: 'Max Hard', speed: 2.5 }
+  },
+  defaultDifficulty: 'medium',
   // Colour themes; the toggle button switches between them at any time.
   defaultTheme: 'dark',
   themes: {

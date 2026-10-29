@@ -9,6 +9,8 @@ class CoinDash extends Phaser.Scene {
     const c = COIN_DASH;
     this.score = 0;
     this.finished = false;
+    // The registry outlives scene restarts, so the chosen difficulty sticks.
+    this.difficulty = c.difficulties[this.registry.get('difficulty') || c.defaultDifficulty];
     this.deadline = this.time.now + c.roundSeconds * 1000;
     this.physics.world.setBounds(0, 44, c.width, c.height - 44);
     this.endPanel = null;
@@ -28,7 +30,8 @@ class CoinDash extends Phaser.Scene {
       this.drones.add(drone);
       drone.body.setCollideWorldBounds(true).setBounce(1, 1);
       const angle = (35 + i * 105) * Math.PI / 180;
-      drone.body.setVelocity(Math.cos(angle) * c.droneSpeed, Math.sin(angle) * c.droneSpeed);
+      const speed = c.droneSpeed * this.difficulty.speed;
+      drone.body.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
     }
     this.physics.add.overlap(this.player, this.coin, () => {
       if (this.finished) return;
@@ -39,7 +42,16 @@ class CoinDash extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys('W,A,S,D,R');
     this.input.keyboard.on('keydown-R', () => this.scene.restart());
+    this.input.keyboard.on('keydown-ONE', () => this.setDifficulty('easy'));
+    this.input.keyboard.on('keydown-TWO', () => this.setDifficulty('medium'));
+    this.input.keyboard.on('keydown-THREE', () => this.setDifficulty('hard'));
+    this.input.keyboard.on('keydown-FOUR', () => this.setDifficulty('maxhard'));
     this.applyTheme();
+  }
+
+  setDifficulty(key) {
+    this.registry.set('difficulty', key);
+    this.scene.restart();
   }
 
   // Restyle everything already on screen; safe to call at any point in a round.
@@ -74,10 +86,11 @@ class CoinDash extends Phaser.Scene {
       - Number(this.cursors.left.isDown || this.keys.A.isDown);
     const dy = Number(this.cursors.down.isDown || this.keys.S.isDown)
       - Number(this.cursors.up.isDown || this.keys.W.isDown);
-    const direction = new Phaser.Math.Vector2(dx, dy).normalize().scale(COIN_DASH.playerSpeed);
+    const direction = new Phaser.Math.Vector2(dx, dy).normalize()
+      .scale(COIN_DASH.playerSpeed * this.difficulty.speed);
     this.player.body.setVelocity(direction.x, direction.y);
     const seconds = Math.max(0, Math.ceil((this.deadline - this.time.now) / 1000));
-    this.hud.setText(`Coins: ${this.score}                       Time: ${seconds}s`);
+    this.hud.setText(`Coins: ${this.score}          ${this.difficulty.label.padEnd(8)}          Time: ${seconds}s`);
     if (seconds === 0) this.finish('Time is up!');
   }
 
