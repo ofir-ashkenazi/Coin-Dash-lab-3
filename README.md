@@ -1,7 +1,8 @@
 # Coin Dash — Lab 3 starter
 
 Collect coins, avoid drones, and survive a 45-second round. Move with arrow keys or WASD;
-press R to restart. This is deliberately small so you can add features during the lab.
+press R to restart. The button at the top right of the game switches between dark and light mode
+at any time (the choice is remembered in the browser). This is deliberately small so you can add features during the lab.
 
 Before each round a start screen lets you choose the player's shape (square, triangle, heart, star)
 and colour (pink, green, blue, purple), with a live preview. Click an option, or use left/right
@@ -42,8 +43,8 @@ laptops' JSON files together and save the combined HTML. Use the same time windo
 - `.gitignore`: keeps generated reports out of Git.
 - `index.html`: page and script loading.
 - `style.css`: page appearance.
-- `settings.js`: round duration, speeds, colours, dimensions and the start screen's player shapes and colours.
-- `game.js`: start screen and game scenes, input, collisions, score and end-of-round behaviour.
+- `settings.js`: round duration, speeds, dark/light colour themes, dimensions and the start screen's player shapes and colours.
+- `game.js`: start screen and game scenes, input, collisions, score, end-of-round behaviour and theme switching.
 - `vendor/phaser-3.90.0.min.js`: the pinned Phaser runtime, byte for byte the file published at
   `https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js`; `vendor/LICENSE.phaser.txt` is its MIT licence.
 
