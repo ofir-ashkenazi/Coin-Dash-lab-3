@@ -41,6 +41,7 @@ class CoinDash extends Phaser.Scene {
     this.input.keyboard.on('keydown-ONE', () => this.setDifficulty('easy'));
     this.input.keyboard.on('keydown-TWO', () => this.setDifficulty('medium'));
     this.input.keyboard.on('keydown-THREE', () => this.setDifficulty('hard'));
+    this.input.keyboard.on('keydown-FOUR', () => this.setDifficulty('maxhard'));
   }
 
   setDifficulty(key) {
@@ -70,7 +71,7 @@ class CoinDash extends Phaser.Scene {
       .scale(COIN_DASH.playerSpeed * this.difficulty.speed);
     this.player.body.setVelocity(direction.x, direction.y);
     const seconds = Math.max(0, Math.ceil((this.deadline - this.time.now) / 1000));
-    this.hud.setText(`Coins: ${this.score}          ${this.difficulty.label.padEnd(6)}          Time: ${seconds}s`);
+    this.hud.setText(`Coins: ${this.score}          ${this.difficulty.label.padEnd(8)}          Time: ${seconds}s`);
     if (seconds === 0) this.finish('Time is up!');
   }
 
