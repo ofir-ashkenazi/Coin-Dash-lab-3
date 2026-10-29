@@ -178,6 +178,54 @@ class StartScreen extends Phaser.Scene {
   }
 }
 
+const sound = {
+  ctx: null,
+  unlock() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    this.ctx = this.ctx || new AC();
+    if (this.ctx.state === 'suspended') this.ctx.resume();
+    return this.ctx;
+  },
+  choice() { return document.getElementById('sound')?.value || COIN_DASH.defaultSound; },
+  play(def) {
+    const ctx = def && this.unlock();
+    if (!ctx) return;
+    const t = ctx.currentTime, end = t + def.duration, gain = ctx.createGain();
+    gain.gain.setValueAtTime(def.volume, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, end);
+    gain.connect(ctx.destination);
+    let src, out = gain;
+    if (def.type === 'noise') {
+      const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * def.duration), ctx.sampleRate);
+      buf.getChannelData(0).forEach((_, i, d) => { d[i] = Math.random() * 2 - 1; });
+      src = ctx.createBufferSource();
+      src.buffer = buf;
+      out = ctx.createBiquadFilter();
+      out.frequency.setValueAtTime(def.freq, t);
+      out.frequency.exponentialRampToValueAtTime(def.to, end);
+      out.connect(gain);
+    } else {
+      src = ctx.createOscillator();
+      src.type = def.type;
+      src.frequency.setValueAtTime(def.freq, t);
+      src.frequency.exponentialRampToValueAtTime(def.to, end);
+    }
+    src.connect(out);
+    src.start(t);
+    src.stop(end);
+  },
+  playChoice() { this.play(COIN_DASH.sounds[this.choice()]); },
+  playPickup() { if (COIN_DASH.sounds[this.choice()]) this.play(COIN_DASH.pickupSound); }
+};
+['pointerdown', 'keydown'].forEach(type => window.addEventListener(type, () => sound.unlock()));
+const soundSelect = document.getElementById('sound');
+if (soundSelect) {
+  Object.keys(COIN_DASH.sounds).forEach(name => soundSelect.add(new Option(name, name)));
+  soundSelect.value = COIN_DASH.defaultSound;
+  soundSelect.addEventListener('change', () => { soundSelect.blur(); sound.playChoice(); });
+}
+
 class CoinDash extends Phaser.Scene {
   constructor() { super('CoinDash'); }
 
@@ -186,6 +234,8 @@ class CoinDash extends Phaser.Scene {
     this.choice = playerChoice(this);
     this.score = 0;
     this.finished = false;
+    // The registry outlives scene restarts, so the chosen difficulty sticks.
+    this.difficulty = c.difficulties[this.registry.get('difficulty') || c.defaultDifficulty];
     // The deadline is set on the first update: this scene's clock is stale until then, and using it
     // here would count the time spent on the start screen against the round.
     this.deadline = null;
@@ -212,19 +262,33 @@ class CoinDash extends Phaser.Scene {
       this.drones.add(drone);
       drone.body.setCollideWorldBounds(true).setBounce(1, 1);
       const angle = (35 + i * 105) * Math.PI / 180;
-      drone.body.setVelocity(Math.cos(angle) * c.droneSpeed, Math.sin(angle) * c.droneSpeed);
+      const speed = c.droneSpeed * this.difficulty.speed;
+      drone.body.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed);
     }
     this.physics.add.overlap(this.player, this.coin, () => {
       if (this.finished) return;
       this.score++;
+      sound.playPickup();
       this.placeCoin();
     });
-    this.physics.add.overlap(this.player, this.drones, () => this.finish('A drone caught you!'));
+    this.physics.add.overlap(this.player, this.drones, () => {
+      if (!this.finished) sound.playChoice();
+      this.finish('A drone caught you!');
+    });
     this.cursors = this.input.keyboard.createCursorKeys();
     this.keys = this.input.keyboard.addKeys('W,A,S,D,R,M');
     this.input.keyboard.on('keydown-R', () => this.scene.restart());
     this.input.keyboard.on('keydown-M', () => { if (this.finished) this.scene.start('StartScreen'); });
+    this.input.keyboard.on('keydown-ONE', () => this.setDifficulty('easy'));
+    this.input.keyboard.on('keydown-TWO', () => this.setDifficulty('medium'));
+    this.input.keyboard.on('keydown-THREE', () => this.setDifficulty('hard'));
+    this.input.keyboard.on('keydown-FOUR', () => this.setDifficulty('maxhard'));
     this.applyTheme();
+  }
+
+  setDifficulty(key) {
+    this.registry.set('difficulty', key);
+    this.scene.restart();
   }
 
   // Restyle everything already on screen; safe to call at any point in a round.
@@ -259,11 +323,12 @@ class CoinDash extends Phaser.Scene {
       - Number(this.cursors.left.isDown || this.keys.A.isDown);
     const dy = Number(this.cursors.down.isDown || this.keys.S.isDown)
       - Number(this.cursors.up.isDown || this.keys.W.isDown);
-    const direction = new Phaser.Math.Vector2(dx, dy).normalize().scale(COIN_DASH.playerSpeed);
+    const direction = new Phaser.Math.Vector2(dx, dy).normalize()
+      .scale(COIN_DASH.playerSpeed * this.difficulty.speed);
     this.player.body.setVelocity(direction.x, direction.y);
     if (this.deadline === null) this.deadline = this.time.now + COIN_DASH.roundSeconds * 1000;
     const seconds = Math.max(0, Math.ceil((this.deadline - this.time.now) / 1000));
-    this.hud.setText(`Coins: ${this.score}                       Time: ${seconds}s`);
+    this.hud.setText(`Coins: ${this.score}          ${this.difficulty.label.padEnd(8)}          Time: ${seconds}s`);
     if (seconds === 0) this.finish('Time is up!');
   }
 

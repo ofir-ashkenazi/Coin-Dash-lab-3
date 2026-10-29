@@ -6,6 +6,23 @@ window.COIN_DASH = {
   playerSpeed: 240,
   droneSpeed: 105,
   droneCount: 3,
+  // Difficulty scales player and drone speed; keys 1-4 switch and restart the round.
+  difficulties: {
+    easy: { label: 'Easy', speed: 0.75 },
+    medium: { label: 'Medium', speed: 1 },
+    hard: { label: 'Hard', speed: 1.75 },
+    maxhard: { label: 'Max Hard', speed: 2.5 }
+  },
+  defaultDifficulty: 'medium',
+  // Synthesized with Web Audio; type 'noise' is a filtered noise burst (freq = low-pass cutoff).
+  defaultSound: 'Beep',
+  sounds: {
+    Beep: { type: 'square', freq: 880, to: 660, duration: 0.18, volume: 0.15 },
+    Buzz: { type: 'sawtooth', freq: 140, to: 70, duration: 0.4, volume: 0.2 },
+    Boom: { type: 'noise', freq: 900, to: 60, duration: 0.6, volume: 0.6 },
+    Off: null
+  },
+  pickupSound: { type: 'sine', freq: 990, to: 1480, duration: 0.08, volume: 0.12 },
   // Colour themes; the toggle button switches between them at any time. "player" is the accent
   // colour; the player itself is drawn in the colour chosen on the start screen.
   defaultTheme: 'dark',
