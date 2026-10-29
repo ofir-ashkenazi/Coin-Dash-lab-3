@@ -9,8 +9,10 @@
 <main>
   <header><p>LAB 3 · STARTER GAME</p><h1>Coin Dash</h1>
   <p>Collect yellow coins. Dodge red drones. How many can you collect in 45 seconds?</p></header>
-  <div id="game" aria-label="Coin Dash game. Move with arrow keys or WASD."></div>
-  <p>Move: <strong>arrow keys / WASD</strong> · Restart: <strong>R</strong></p>
+  <div id="game" aria-label="Coin Dash game. Move with arrow keys or WASD.">
+    <button id="theme-toggle" type="button" aria-label="Switch to light mode">Light mode</button>
+  </div>
+  <p>Move: <strong>arrow keys / WASD</strong> · Restart: <strong>R</strong> · Theme: <strong>button at top right</strong></p>
   <p><label for="sound">Collision sound:</label> <select id="sound"></select></p>
 </main>
 <script src="vendor/phaser-3.90.0.min.js"></script>
