@@ -6,8 +6,9 @@ window.COIN_DASH = {
   playerSpeed: 240,
   droneSpeed: 105,
   droneCount: 3,
-  // Difficulty scales player and drone speed; keys 1-4 switch and restart the round.
+  // Difficulty scales player and drone speed; keys 0-4 switch and restart the round.
   difficulties: {
+    supereasy: { label: 'Super Easy', speed: 0.5 },
     easy: { label: 'Easy', speed: 0.75 },
     medium: { label: 'Medium', speed: 1 },
     hard: { label: 'Hard', speed: 1.75 },
@@ -20,6 +21,7 @@ window.COIN_DASH = {
     Beep: { type: 'square', freq: 880, to: 660, duration: 0.18, volume: 0.15 },
     Buzz: { type: 'sawtooth', freq: 140, to: 70, duration: 0.4, volume: 0.2 },
     Boom: { type: 'noise', freq: 900, to: 60, duration: 0.6, volume: 0.6 },
+    Chirp: { type: 'triangle', freq: 400, to: 1600, duration: 0.25, volume: 0.25 },
     Off: null
   },
   pickupSound: { type: 'sine', freq: 990, to: 1480, duration: 0.08, volume: 0.12 },
